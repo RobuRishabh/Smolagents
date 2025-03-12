@@ -2,7 +2,7 @@ from smolagents import CodeAgent, LiteLLMModel
 
 # Initialize the model with simplified configuration
 model = LiteLLMModel(
-    model_id="ollama/llama2:13b",
+    model_id="ollama_chat/llama2:13b",
     api_base="http://localhost:11434",
     num_ctx=3000,
     # mode="completion"
