@@ -1,6 +1,6 @@
 # app.py
 from smolagents import CodeAgent, LiteLLMModel
-from tools.ml_pipeline import MLPipelineTool, LLMCodeGeneratorTool
+from tools.ml_pipeline import MLPipelineTool, FinalPythonScriptTool
 import yaml
 from dotenv import load_dotenv
 import os
@@ -10,8 +10,8 @@ import logging
 from streamlit_UI import run_ui, display_results
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+# logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -31,13 +31,14 @@ def run_agent(user_inputs):
 
     with st.spinner("Running agent..."):
         try:
-            logger.info("Starting agent execution")
-            df_preview = df.head(10).to_string()
-            df_schema = str(df.dtypes)
+            # logger.info("Starting agent execution")
+            # df_preview = df.head(10).to_string()
+            # df_schema = str(df.dtypes)
 
             user_prompt = ML_WORKFLOW_PROMPT.format(
-                df_preview=df_preview,
-                df_schema=df_schema,
+                # df_preview=df_preview,
+                # df_schema=df_schema,
+                df=df,
                 feature_columns=feature_columns,
                 target_column=target_column,
                 task_type=task_type,
@@ -45,14 +46,14 @@ def run_agent(user_inputs):
             )
 
             model = LiteLLMModel(
-                model_id="ollama_chat/deepseek-r1:1.5b",
+                model_id="ollama_chat/qwen2.5-coder:3b",
                 api_base="http://127.0.0.1:11434",
                 num_ctx=8000,
             )
 
             tools = [
                 MLPipelineTool(),
-                LLMCodeGeneratorTool(model)
+                # FinalPythonScriptTool(model)
             ]
             agent = CodeAgent(
                 model=model,
@@ -61,9 +62,10 @@ def run_agent(user_inputs):
                     "pandas", "numpy", "sklearn.model_selection", "sklearn.linear_model",
                     "sklearn.ensemble", "sklearn.metrics", "plotly.graph_objects",
                     "plotly.express", "plotly.figure_factory", "sklearn.preprocessing",
-                    "os"
+                    "os", "sklearn", "typing", "yaml", "dotenv", "streamlit", "traceback",
+                    "logging", "matplotlib.pyplot"
                 ],
-                max_steps=15
+                max_steps=6
             )
 
             additional_args = {
@@ -74,7 +76,7 @@ def run_agent(user_inputs):
                 "model_type": model_type  # Use preprocessed model_type
             }
 
-            logger.info("Running agent in non-streaming mode")
+            # logger.info("Running agent in non-streaming mode")
             response = agent.run(user_prompt, additional_args=additional_args, stream=False)
 
             import ast
@@ -83,21 +85,21 @@ def run_agent(user_inputs):
                 if "result =" in line:
                     result_code = line.split("result =")[1].strip()
                     final_result = ast.literal_eval(result_code)
-                    logger.info("Extracted final result from response")
+                    # logger.info("Extracted final result from response")
                     break
 
             if not final_result:
-                logger.warning("No final result found in response")
+                # logger.warning("No final result found in response")
                 metrics, fig = agent.tools[0].forward(df, feature_columns, target_column, task_type, model_type)
                 code_str = agent.tools[1].forward(feature_columns, target_column, task_type, model_type)
                 final_result = (metrics, fig, code_str)
-                logger.info("Fallback: Executed tools directly")
+                # logger.info("Fallback: Executed tools directly")
 
             st.success("✅ Agent completed execution!")
             return final_result
 
         except Exception as e:
-            logger.error(f"Agent execution failed: {str(e)}")
+            # logger.error(f"Agent execution failed: {str(e)}")
             st.error(f"❌ Agent execution failed: {str(e)}")
             st.error(f"Traceback:\n{traceback.format_exc()}")
             return None

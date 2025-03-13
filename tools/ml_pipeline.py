@@ -84,12 +84,12 @@ class MLPipelineTool(Tool):
         return metrics, fig
 
 # LLMCodeGeneratorTool for generating code
-class LLMCodeGeneratorTool(Tool):
+class FinalPythonScriptTool(Tool):
     def __init__(self, model):
         super().__init__()
         self.model = model
 
-    name = "llm_code_generator"
+    name = "final_python_script"
     description = "Generates Python ML code using an LLM model instance (LiteLLM)."
     inputs = {
         "feature_columns": {"type": "array", "description": "List of feature column names."},
