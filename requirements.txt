@@ -5,3 +5,4 @@ scikit-learn
 plotly
 smolagents[e2b]
 python-dotenv
+pyyaml

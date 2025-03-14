@@ -1,6 +1,6 @@
 # app.py
 from smolagents import CodeAgent, LiteLLMModel
-from tools.ml_pipeline import MLPipelineTool, FinalPythonScriptTool
+from tools.ml_pipeline import MLPipelineTool
 import yaml
 from dotenv import load_dotenv
 import os
@@ -27,7 +27,7 @@ def run_agent(user_inputs):
     target_column = user_inputs["target_column"]
     feature_columns = user_inputs["feature_columns"]
     task_type = user_inputs["task_type"]
-    model_type = user_inputs["model_type"].replace(' ', '')  # Preprocess to remove spaces
+    model_type = user_inputs["model_type"].replace(' ', '')  
 
     with st.spinner("Running agent..."):
         try:
@@ -36,13 +36,11 @@ def run_agent(user_inputs):
             # df_schema = str(df.dtypes)
 
             user_prompt = ML_WORKFLOW_PROMPT.format(
-                # df_preview=df_preview,
-                # df_schema=df_schema,
                 df=df,
                 feature_columns=feature_columns,
                 target_column=target_column,
                 task_type=task_type,
-                model_type=model_type  # Use preprocessed model_type
+                model_type=model_type 
             )
 
             model = LiteLLMModel(
@@ -52,8 +50,7 @@ def run_agent(user_inputs):
             )
 
             tools = [
-                MLPipelineTool(),
-                # FinalPythonScriptTool(model)
+                MLPipelineTool()
             ]
             agent = CodeAgent(
                 model=model,
@@ -65,7 +62,7 @@ def run_agent(user_inputs):
                     "os", "sklearn", "typing", "yaml", "dotenv", "streamlit", "traceback",
                     "logging", "matplotlib.pyplot"
                 ],
-                max_steps=6
+                max_steps=10 # Change it according to your needs
             )
 
             additional_args = {
@@ -91,7 +88,7 @@ def run_agent(user_inputs):
             if not final_result:
                 # logger.warning("No final result found in response")
                 metrics, fig = agent.tools[0].forward(df, feature_columns, target_column, task_type, model_type)
-                code_str = agent.tools[1].forward(feature_columns, target_column, task_type, model_type)
+                code_str = None
                 final_result = (metrics, fig, code_str)
                 # logger.info("Fallback: Executed tools directly")
 
